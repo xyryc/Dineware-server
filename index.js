@@ -51,11 +51,27 @@ async function run() {
     res.send(result);
   });
 
+  // get foods by email for my foods page
   app.get("/foods/:email", async (req, res) => {
     const user_email = req.params.email;
 
     const query = { email: user_email };
     const result = await foodsCollection.find(query).toArray();
+    res.send(result);
+  });
+
+  // food data update api
+  app.put("/food/update/:id", async (req, res) => {
+    const id = req.params.id;
+    const foodData = req.body;
+
+    const filter = { _id: new ObjectId(id) };
+    const updatedDoc = {
+      $set: foodData,
+    };
+    const options = { upsert: true };
+
+    const result = await foodsCollection.updateOne(filter, updatedDoc, options);
     res.send(result);
   });
 
