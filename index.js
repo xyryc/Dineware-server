@@ -27,6 +27,7 @@ async function run() {
   // await client.connect();
 
   const foodsCollection = client.db("dineware").collection("foods");
+  const ordersCollection = client.db("dineware").collection("orders");
 
   //   food related apis
   app.get("/foods", async (req, res) => {
@@ -39,6 +40,13 @@ async function run() {
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
     const result = await foodsCollection.findOne(query);
+    res.send(result);
+  });
+
+  // save an order in order_db
+  app.post("/order", async (req, res) => {
+    const order_data = req.body;
+    const result = await ordersCollection.insertOne(order_data);
     res.send(result);
   });
 
