@@ -7,7 +7,7 @@ require("dotenv").config();
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const uri = "mongodb://localhost:27017/";
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.t08r2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -31,6 +31,14 @@ async function run() {
   //   food related apis
   app.get("/foods", async (req, res) => {
     const result = await foodsCollection.find().toArray();
+    res.send(result);
+  });
+
+  // get food details by id
+  app.get("/food/:id", async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await foodsCollection.findOne(query);
     res.send(result);
   });
 
