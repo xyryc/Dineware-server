@@ -77,9 +77,17 @@ async function run() {
 
   // order related API
   // save an order in order_db
-  app.post("/order", async (req, res) => {
+  app.post("/orders", async (req, res) => {
     const order_data = req.body;
     const result = await ordersCollection.insertOne(order_data);
+    res.send(result);
+  });
+
+  // get logged in users order data
+  app.get("/orders/:email", async (req, res) => {
+    const user_email = req.params.email;
+    const query = { buyerEmail: user_email };
+    const result = await ordersCollection.find(query).toArray();
     res.send(result);
   });
 
