@@ -44,9 +44,18 @@ async function run() {
     res.send(result);
   });
 
+  // add food to db
   app.post("/add-food", async (req, res) => {
     const foodData = req.body;
     const result = await foodsCollection.insertOne(foodData);
+    res.send(result);
+  });
+
+  app.get("/foods/:email", async (req, res) => {
+    const user_email = req.params.email;
+
+    const query = { email: user_email };
+    const result = await foodsCollection.find(query).toArray();
     res.send(result);
   });
 
