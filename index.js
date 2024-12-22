@@ -29,7 +29,8 @@ async function run() {
   const foodsCollection = client.db("dineware").collection("foods");
   const ordersCollection = client.db("dineware").collection("orders");
 
-  //   food related apis
+  // food related API
+  // food related apis
   app.get("/foods", async (req, res) => {
     const result = await foodsCollection.find().toArray();
     res.send(result);
@@ -43,6 +44,13 @@ async function run() {
     res.send(result);
   });
 
+  app.post("/add-food", async (req, res) => {
+    const foodData = req.body;
+    const result = await foodsCollection.insertOne(foodData);
+    res.send(result);
+  });
+
+  // order related API
   // save an order in order_db
   app.post("/order", async (req, res) => {
     const order_data = req.body;
