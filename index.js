@@ -30,7 +30,7 @@ async function run() {
   const ordersCollection = client.db("dineware").collection("orders");
 
   // food related API
-  // food related apis
+  // get all foods + search, sort, filter
   app.get("/foods", async (req, res) => {
     const filter = req.query.filter || null;
     const search = req.query.search || "";
@@ -66,6 +66,15 @@ async function run() {
       console.error(error);
       res.status(500).send({ error: "Failed to fetch food items." });
     }
+  });
+
+  app.get("/foods/top-selling", async (req, res) => {
+    const result = await foodsCollection
+      .find()
+      .sort({ purchase_count: -1 })
+      .limit(6)
+      .toArray();
+    res.send(result);
   });
 
   // get food details by id
