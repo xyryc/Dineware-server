@@ -32,8 +32,40 @@ async function run() {
   // food related API
   // food related apis
   app.get("/foods", async (req, res) => {
-    const result = await foodsCollection.find().toArray();
-    res.send(result);
+    const filter = req.query.filter || null;
+    const search = req.query.search || "";
+    const sort = req.query.sort || null;
+
+    // Validate sort and filter
+    const validSortValues = ["asc", "dsc"];
+    if (sort && !validSortValues.includes(sort)) {
+      return res.status(400).send({ error: "Invalid sort value." });
+    }
+
+    // Build query
+    let query = {};
+    if (search) {
+      query.foodName = { $regex: search, $options: "i" };
+    }
+    if (filter) {
+      query.foodOrigin = filter;
+    }
+
+    // Sorting options
+    const options = sort ? { sort: { price: sort === "asc" ? 1 : -1 } } : {};
+
+    try {
+      const result = await foodsCollection.find(query, options).toArray();
+      if (result.length === 0) {
+        return res
+          .status(200)
+          .send({ message: "No food items found.", data: [] });
+      }
+      res.send(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: "Failed to fetch food items." });
+    }
   });
 
   // get food details by id
