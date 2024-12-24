@@ -9,7 +9,12 @@ require("dotenv").config();
 // middlewares
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://dineware.web.app",
+      "https://dineware.firebaseapp.com",
+      "https://dineware.surge.sh",
+    ],
     credentials: true,
   })
 );
@@ -29,14 +34,15 @@ const verifyToken = (req, res, next) => {
       return res.status(401).send({ message: "unauthorized access" });
     }
     req.user = decoded;
+
     next();
   });
 };
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
-const uri = "mongodb://localhost:27017/";
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.t08r2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+// const uri = "mongodb://localhost:27017/";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.t08r2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -65,7 +71,8 @@ async function run() {
     res
       .cookie("token", token, {
         httpOnly: true,
-        secure: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       })
       .send({ success: true });
   });
@@ -74,7 +81,8 @@ async function run() {
     res
       .clearCookie("token", {
         httpOnly: true,
-        secure: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       })
       .send({ success: true });
   });
@@ -136,7 +144,7 @@ async function run() {
   });
 
   // add food to db
-  app.post("/add-food", async (req, res) => {
+  app.post("/add-food", verifyToken, async (req, res) => {
     const foodData = req.body;
     const result = await foodsCollection.insertOne(foodData);
     res.send(result);
@@ -158,7 +166,7 @@ async function run() {
   });
 
   // food data update api
-  app.put("/food/update/:id", async (req, res) => {
+  app.put("/food/update/:id", verifyToken, async (req, res) => {
     const id = req.params.id;
     const foodData = req.body;
 
@@ -174,21 +182,28 @@ async function run() {
 
   // order related API
   // save an order in order_db
-  app.post("/orders", async (req, res) => {
+  app.post("/orders", verifyToken, async (req, res) => {
     const order_data = req.body;
     const result = await ordersCollection.insertOne(order_data);
     res.send(result);
   });
 
   // get logged in users order data
-  app.get("/orders/:email", async (req, res) => {
+  app.get("/orders/:email", verifyToken, async (req, res) => {
     const user_email = req.params.email;
+    const decoded_email = req.user?.email;
+
+    // token_email !== query/params email
+    if (decoded_email !== user_email) {
+      return res.status(403).send({ message: "forbidden access" });
+    }
+
     const query = { buyerEmail: user_email };
     const result = await ordersCollection.find(query).toArray();
     res.send(result);
   });
 
-  app.delete("/orders/delete/:id", async (req, res) => {
+  app.delete("/orders/delete/:id", verifyToken, async (req, res) => {
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
     const result = await ordersCollection.deleteOne(query);
@@ -196,8 +211,8 @@ async function run() {
   });
 
   // Send a ping to confirm a successful connection
-  await client.db("admin").command({ ping: 1 });
-  console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  // await client.db("admin").command({ ping: 1 });
+  // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   //   } finally {
   // Ensures that the client will close when you finish/error
   // await client.close();
