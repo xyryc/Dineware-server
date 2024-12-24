@@ -1,11 +1,20 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const app = express();
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 
-app.use(cors());
+// middlewares
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
@@ -28,6 +37,21 @@ async function run() {
 
   const foodsCollection = client.db("dineware").collection("foods");
   const ordersCollection = client.db("dineware").collection("orders");
+
+  // auth related API
+  app.post("/jwt", (req, res) => {
+    const user = req.body;
+    const token = jwt.sign(user, process.env.SECRET_KEY, {
+      expiresIn: "6h",
+    });
+
+    res
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: false,
+      })
+      .send({ success: true });
+  });
 
   // food related API
   // get all foods + search, sort, filter
