@@ -16,6 +16,23 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token;
+
+  if (!token) {
+    res.status(401).send({ message: "unauthorized access" });
+  }
+
+  // verify
+  jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const uri = "mongodb://localhost:27017/";
@@ -47,6 +64,15 @@ async function run() {
 
     res
       .cookie("token", token, {
+        httpOnly: true,
+        secure: false,
+      })
+      .send({ success: true });
+  });
+
+  app.post("/logout", (req, res) => {
+    res
+      .clearCookie("token", {
         httpOnly: true,
         secure: false,
       })
@@ -117,8 +143,14 @@ async function run() {
   });
 
   // get foods by email for my foods page
-  app.get("/foods/:email", async (req, res) => {
+  app.get("/foods/:email", verifyToken, async (req, res) => {
     const user_email = req.params.email;
+    const decoded_email = req.user?.email;
+
+    // token_email !== query/params email
+    if (decoded_email !== user_email) {
+      return res.status(403).send({ message: "forbidden access" });
+    }
 
     const query = { email: user_email };
     const result = await foodsCollection.find(query).toArray();
