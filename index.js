@@ -143,6 +143,13 @@ async function run() {
     res.send(result);
   });
 
+  app.get("/food/secure/:id", verifyToken, async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await foodsCollection.findOne(query);
+    res.send(result);
+  });
+
   // add food to db
   app.post("/add-food", verifyToken, async (req, res) => {
     const foodData = req.body;
