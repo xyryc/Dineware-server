@@ -2,6 +2,14 @@
 
 This repository contains the server-side code for the Dineware application.
 
+Live: [dineware.web.app](https://dineware.web.app)
+
+Live Backup: [dineware.surge.sh](https://dineware.surge.sh)
+
+Client Repo: [https://github.com/xyryc/Dineware-client](https://github.com/xyryc/Dineware-client)
+
+Server Repo: [https://github.com/xyryc/Dineware-server](https://github.com/xyryc/Dineware-server)
+
 ## Introduction
 
 Dineware is a comprehensive restaurant management system designed to streamline operations and enhance customer experience. This server repository handles all backend functionalities.
